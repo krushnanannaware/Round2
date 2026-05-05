@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In — AuthVault</title>
+  <meta name="description" content="Log in to your AuthVault account securely." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- Background -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <div class="brand-logo">🔐</div>
+      <span class="brand-name">AuthVault</span>
+    </a>
+    <div class="navbar-links">
+      <span style="font-size:0.85rem;color:var(--text-secondary)">New here?</span>
+      <a href="/signup" class="btn btn-primary">Sign Up Free</a>
+    </div>
+  </nav>
+
+  <!-- Login Form -->
+  <main class="auth-page">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-icon">👋</div>
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to continue to your dashboard</p>
+      </div>
+
+      <!-- Alert banner -->
+      <div class="alert alert-error" id="loginAlert" role="alert">
+        <span>⚠️</span>
+        <span id="loginAlertMsg">Invalid email or password.</span>
+      </div>
+
+      <!-- Success banner (if redirected after signup) -->
+      <div class="alert alert-success" id="loginSuccess" role="alert">
+        <span>✅</span>
+        <span>Account created! Please log in.</span>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <div class="input-wrapper">
+            <input
+              class="form-input"
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            />
+            <span class="input-icon">✉️</span>
+          </div>
+          <span class="field-error" id="emailError"></span>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <label class="form-label" for="password" style="margin-bottom:0">Password</label>
+            <a href="#" style="font-size:0.78rem;color:var(--accent-secondary);text-decoration:none;">Forgot password?</a>
+          </div>
+          <div class="input-wrapper" style="margin-top:8px">
+            <input
+              class="form-input has-toggle"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+            <span class="input-icon">🔑</span>
+            <button type="button" class="password-toggle" id="pwToggle" aria-label="Toggle password">👁️</button>
+          </div>
+          <span class="field-error" id="passwordError"></span>
+        </div>
+
+        <!-- Remember me -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+          <input type="checkbox" id="remember" style="accent-color:var(--accent-primary);width:16px;height:16px;cursor:pointer;" />
+          <label for="remember" style="font-size:0.85rem;color:var(--text-secondary);cursor:pointer;">Remember me</label>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">
+          <div class="spinner" id="loginSpinner"></div>
+          <span id="loginBtnText">Sign In</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="/signup">Sign up free</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('authToken')) {
+      window.location.href = '/dashboard';
+    }
+
+    const form = document.getElementById('loginForm');
+    const pwInput = document.getElementById('password');
+    const pwToggle = document.getElementById('pwToggle');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginSpinner = document.getElementById('loginSpinner');
+    const loginBtnText = document.getElementById('loginBtnText');
+    const loginAlert = document.getElementById('loginAlert');
+    const loginAlertMsg = document.getElementById('loginAlertMsg');
+
+    // Password toggle
+    pwToggle.addEventListener('click', () => {
+      const isText = pwInput.type === 'text';
+      pwInput.type = isText ? 'password' : 'text';
+      pwToggle.textContent = isText ? '👁️' : '🙈';
+    });
+
+    // Client-side validation
+    function validateForm(data) {
+      let valid = true;
+      clearErrors();
+      if (!data.email || !/^\S+@\S+\.\S+$/.test(data.email)) {
+        showFieldError('email', 'Please enter a valid email address.');
+        valid = false;
+      }
+      if (!data.password) {
+        showFieldError('password', 'Password is required.');
+        valid = false;
+      }
+      return valid;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        email: document.getElementById('email').value.trim(),
+        password: pwInput.value,
+      };
+
+      if (!validateForm(data)) return;
+
+      setLoading(true);
+      hideAlerts();
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+
+        if (res.ok && json.success) {
+          localStorage.setItem('authToken', json.token);
+          localStorage.setItem('authUser', JSON.stringify(json.user));
+          window.location.href = '/dashboard';
+        } else {
+          const msg = json.errors
+            ? json.errors.map(e => e.message).join(' • ')
+            : json.message || 'Login failed. Please try again.';
+          showAlert(msg);
+        }
+      } catch (err) {
+        showAlert('Network error. Is the server running?');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    function setLoading(state) {
+      loginBtn.disabled = state;
+      loginSpinner.classList.toggle('visible', state);
+      loginBtnText.textContent = state ? 'Signing in...' : 'Sign In';
+    }
+
+    function showAlert(msg) {
+      loginAlertMsg.textContent = msg;
+      loginAlert.classList.add('visible');
+    }
+
+    function hideAlerts() {
+      loginAlert.classList.remove('visible');
+      document.getElementById('loginSuccess').classList.remove('visible');
+    }
+
+    function showFieldError(field, msg) {
+      const el = document.getElementById(field + 'Error');
+      const input = document.getElementById(field);
+      if (el) { el.textContent = msg; el.classList.add('visible'); }
+      if (input) input.classList.add('invalid');
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.field-error').forEach(el => {
+        el.textContent = '';
+        el.classList.remove('visible');
+      });
+      document.querySelectorAll('.form-input').forEach(el => el.classList.remove('invalid'));
+    }
+  </script>
+</body>
+</html>

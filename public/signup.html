@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up — AuthVault</title>
+  <meta name="description" content="Create your AuthVault account to get started with secure authentication." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- Background -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <div class="brand-logo">🔐</div>
+      <span class="brand-name">AuthVault</span>
+    </a>
+    <div class="navbar-links">
+      <span style="font-size:0.85rem;color:var(--text-secondary)">Already have an account?</span>
+      <a href="/login" class="btn btn-ghost">Log In</a>
+    </div>
+  </nav>
+
+  <!-- Signup Form -->
+  <main class="auth-page">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-icon">✨</div>
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Start your journey with AuthVault today</p>
+      </div>
+
+      <!-- Alert banner -->
+      <div class="alert alert-error" id="signupAlert" role="alert">
+        <span>⚠️</span>
+        <span id="signupAlertMsg">Something went wrong.</span>
+      </div>
+
+      <form id="signupForm" novalidate>
+        <!-- Name -->
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name</label>
+          <div class="input-wrapper">
+            <input
+              class="form-input"
+              type="text"
+              id="name"
+              name="name"
+              placeholder="John Doe"
+              autocomplete="name"
+              required
+            />
+            <span class="input-icon">👤</span>
+          </div>
+          <span class="field-error" id="nameError"></span>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <div class="input-wrapper">
+            <input
+              class="form-input"
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            />
+            <span class="input-icon">✉️</span>
+          </div>
+          <span class="field-error" id="emailError"></span>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <input
+              class="form-input has-toggle"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Min. 6 characters with a number"
+              autocomplete="new-password"
+              required
+            />
+            <span class="input-icon">🔑</span>
+            <button type="button" class="password-toggle" id="pwToggle" aria-label="Toggle password">👁️</button>
+          </div>
+          <!-- Strength bar -->
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <div class="strength-label" id="strengthLabel" style="color:var(--text-muted)"></div>
+          <span class="field-error" id="passwordError"></span>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">Confirm Password</label>
+          <div class="input-wrapper">
+            <input
+              class="form-input has-toggle"
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Re-enter your password"
+              autocomplete="new-password"
+              required
+            />
+            <span class="input-icon">🔒</span>
+            <button type="button" class="password-toggle" id="cpwToggle" aria-label="Toggle confirm password">👁️</button>
+          </div>
+          <span class="field-error" id="confirmPasswordError"></span>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="signupBtn" style="margin-top:8px;">
+          <div class="spinner" id="signupSpinner"></div>
+          <span id="signupBtnText">Create Account</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/login">Sign in</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/auth.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('authToken')) {
+      window.location.href = '/dashboard';
+    }
+
+    const form = document.getElementById('signupForm');
+    const pwInput = document.getElementById('password');
+    const cpwInput = document.getElementById('confirmPassword');
+    const pwToggle = document.getElementById('pwToggle');
+    const cpwToggle = document.getElementById('cpwToggle');
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthLabel = document.getElementById('strengthLabel');
+    const signupBtn = document.getElementById('signupBtn');
+    const signupSpinner = document.getElementById('signupSpinner');
+    const signupBtnText = document.getElementById('signupBtnText');
+    const signupAlert = document.getElementById('signupAlert');
+    const signupAlertMsg = document.getElementById('signupAlertMsg');
+
+    // Toggle password visibility
+    pwToggle.addEventListener('click', () => togglePw(pwInput, pwToggle));
+    cpwToggle.addEventListener('click', () => togglePw(cpwInput, cpwToggle));
+
+    function togglePw(input, btn) {
+      const isText = input.type === 'text';
+      input.type = isText ? 'password' : 'text';
+      btn.textContent = isText ? '👁️' : '🙈';
+    }
+
+    // Password strength
+    pwInput.addEventListener('input', () => {
+      const val = pwInput.value;
+      let score = 0;
+      if (val.length >= 6) score++;
+      if (val.length >= 10) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/\d/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const levels = [
+        { label: '', color: '', width: '0%' },
+        { label: 'Weak', color: '#ef4444', width: '20%' },
+        { label: 'Fair', color: '#f59e0b', width: '40%' },
+        { label: 'Good', color: '#3b82f6', width: '65%' },
+        { label: 'Strong', color: '#10b981', width: '85%' },
+        { label: 'Very Strong', color: '#7c3aed', width: '100%' },
+      ];
+      const level = levels[Math.min(score, 5)];
+      strengthFill.style.width = level.width;
+      strengthFill.style.background = level.color;
+      strengthLabel.textContent = level.label;
+      strengthLabel.style.color = level.color;
+    });
+
+    // Client-side validation
+    function validateForm(data) {
+      let valid = true;
+      clearErrors();
+
+      if (!data.name || data.name.trim().length < 2) {
+        showFieldError('name', 'Name must be at least 2 characters.');
+        valid = false;
+      }
+      if (!data.email || !/^\S+@\S+\.\S+$/.test(data.email)) {
+        showFieldError('email', 'Please enter a valid email address.');
+        valid = false;
+      }
+      if (!data.password || data.password.length < 6) {
+        showFieldError('password', 'Password must be at least 6 characters.');
+        valid = false;
+      } else if (!/\d/.test(data.password)) {
+        showFieldError('password', 'Password must contain at least one number.');
+        valid = false;
+      }
+      if (data.password !== data.confirmPassword) {
+        showFieldError('confirmPassword', 'Passwords do not match.');
+        valid = false;
+      }
+      return valid;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: pwInput.value,
+        confirmPassword: cpwInput.value,
+      };
+
+      if (!validateForm(data)) return;
+
+      setLoading(true);
+      hideAlert();
+
+      try {
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+
+        if (res.ok && json.success) {
+          localStorage.setItem('authToken', json.token);
+          localStorage.setItem('authUser', JSON.stringify(json.user));
+          window.location.href = '/dashboard';
+        } else {
+          const msg = json.errors
+            ? json.errors.map(e => e.message).join(' • ')
+            : json.message || 'Signup failed. Please try again.';
+          showAlert(msg);
+        }
+      } catch (err) {
+        showAlert('Network error. Is the server running?');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    function setLoading(state) {
+      signupBtn.disabled = state;
+      signupSpinner.classList.toggle('visible', state);
+      signupBtnText.textContent = state ? 'Creating account...' : 'Create Account';
+    }
+
+    function showAlert(msg) {
+      signupAlertMsg.textContent = msg;
+      signupAlert.classList.add('visible');
+    }
+
+    function hideAlert() {
+      signupAlert.classList.remove('visible');
+    }
+
+    function showFieldError(field, msg) {
+      const el = document.getElementById(field + 'Error');
+      const input = document.getElementById(field);
+      if (el) { el.textContent = msg; el.classList.add('visible'); }
+      if (input) input.classList.add('invalid');
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.field-error').forEach(el => {
+        el.textContent = '';
+        el.classList.remove('visible');
+      });
+      document.querySelectorAll('.form-input').forEach(el => el.classList.remove('invalid'));
+    }
+  </script>
+</body>
+</html>

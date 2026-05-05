@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — AuthVault</title>
+  <meta name="description" content="Your AuthVault dashboard — view your account details and manage your profile." />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .activity-list { list-style: none; }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .activity-text { flex: 1; color: var(--text-secondary); }
+    .activity-time { color: var(--text-muted); font-size: 0.78rem; white-space: nowrap; }
+
+    /* Edit Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; visibility: hidden;
+      transition: all 0.25s ease;
+    }
+    .modal-overlay.open { opacity: 1; visibility: visible; }
+    .modal {
+      background: #13131f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 36px;
+      width: 100%; max-width: 420px;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <!-- Background -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <div class="brand-logo">🔐</div>
+      <span class="brand-name">AuthVault</span>
+    </a>
+    <div class="navbar-links" style="gap:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="avatar" id="navAvatar">?</div>
+        <div>
+          <div style="font-size:0.85rem;font-weight:600;" id="navName">Loading...</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);" id="navEmail"></div>
+        </div>
+      </div>
+      <button class="btn btn-ghost" id="logoutBtn" onclick="logout()">🚪 Log Out</button>
+    </div>
+  </nav>
+
+  <!-- Dashboard -->
+  <div class="dashboard-page">
+    <div class="dashboard-container">
+
+      <!-- Header -->
+      <div class="dashboard-header">
+        <div>
+          <div class="dashboard-greeting">
+            Good <span id="timeGreeting">day</span>, <span id="userName">...</span> 👋
+          </div>
+          <div class="dashboard-subtitle" id="lastLoginText">Loading your profile...</div>
+        </div>
+        <button class="btn btn-outline" id="editProfileBtn">✏️ Edit Profile</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(124,58,237,0.15)">👤</div>
+          <div>
+            <div class="stat-label">Account Role</div>
+            <div class="stat-value" id="statRole">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(16,185,129,0.15)">📅</div>
+          <div>
+            <div class="stat-label">Member Since</div>
+            <div class="stat-value" id="statJoined">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(236,72,153,0.15)">🔐</div>
+          <div>
+            <div class="stat-label">Last Login</div>
+            <div class="stat-value" id="statLastLogin">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(6,182,212,0.15)">✅</div>
+          <div>
+            <div class="stat-label">Account Status</div>
+            <div class="stat-value" style="color:#34d399">Active</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Info + Activity -->
+      <div class="profile-section">
+
+        <!-- Profile Details -->
+        <div class="info-card">
+          <div class="info-card-title">👤 Profile Details</div>
+          <div class="info-row">
+            <span class="info-row-label">Full Name</span>
+            <span class="info-row-value" id="profileName">...</span>
+          </div>
+          <div class="info-row">
+            <span class="info-row-label">Email</span>
+            <span class="info-row-value" id="profileEmail">...</span>
+          </div>
+          <div class="info-row">
+            <span class="info-row-label">Role</span>
+            <span class="info-row-value">
+              <span class="badge badge-purple" id="profileRole">user</span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-row-label">Status</span>
+            <span class="info-row-value">
+              <span class="badge badge-green">🟢 Active</span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-row-label">User ID</span>
+            <span class="info-row-value" id="profileId" style="font-size:0.75rem;font-family:monospace;color:var(--text-muted)">...</span>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="info-card">
+          <div class="info-card-title">⚡ Recent Activity</div>
+          <ul class="activity-list" id="activityList">
+            <li class="activity-item">
+              <div class="activity-dot" style="background:#10b981"></div>
+              <div class="activity-text">Account created successfully</div>
+              <div class="activity-time" id="act-created">—</div>
+            </li>
+            <li class="activity-item">
+              <div class="activity-dot" style="background:#7c3aed"></div>
+              <div class="activity-text">Last login recorded</div>
+              <div class="activity-time" id="act-login">—</div>
+            </li>
+            <li class="activity-item">
+              <div class="activity-dot" style="background:#ec4899"></div>
+              <div class="activity-text">JWT token issued</div>
+              <div class="activity-time">Just now</div>
+            </li>
+            <li class="activity-item">
+              <div class="activity-dot" style="background:#06b6d4"></div>
+              <div class="activity-text">Dashboard accessed</div>
+              <div class="activity-time">Just now</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <div class="modal-title">✏️ Edit Profile</div>
+
+      <div class="alert alert-error" id="editAlert" style="margin-bottom:16px">
+        <span>⚠️</span>
+        <span id="editAlertMsg">Error updating profile.</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="editName">Full Name</label>
+        <div class="input-wrapper">
+          <input class="form-input" type="text" id="editName" placeholder="Your name" />
+          <span class="input-icon">👤</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editEmail">Email Address</label>
+        <div class="input-wrapper">
+          <input class="form-input" type="email" id="editEmail" placeholder="your@email.com" />
+          <span class="input-icon">✉️</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="saveProfileBtn" style="flex:1">
+          <div class="spinner" id="editSpinner"></div>
+          <span id="editBtnText">Save Changes</span>
+        </button>
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('authToken');
+    if (!token) window.location.href = '/login';
+
+    // Set time greeting
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+    document.getElementById('timeGreeting').textContent = greeting;
+
+    // Format date
+    function fmtDate(dateStr) {
+      if (!dateStr) return 'N/A';
+      return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+      });
+    }
+
+    function fmtDateTime(dateStr) {
+      if (!dateStr) return 'N/A';
+      return new Date(dateStr).toLocaleString('en-US', {
+        month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+    }
+
+    // Fetch current user
+    async function loadUser() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          window.location.href = '/login';
+          return;
+        }
+
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+        populateDashboard(json.user);
+      } catch (err) {
+        console.error('Failed to load user:', err);
+      }
+    }
+
+    function populateDashboard(user) {
+      // Navbar
+      document.getElementById('navAvatar').textContent = user.name.charAt(0).toUpperCase();
+      document.getElementById('navName').textContent = user.name;
+      document.getElementById('navEmail').textContent = user.email;
+
+      // Header
+      document.getElementById('userName').textContent = user.name.split(' ')[0];
+      document.getElementById('lastLoginText').textContent =
+        user.lastLogin ? `Last login: ${fmtDateTime(user.lastLogin)}` : 'Welcome! This is your first login.';
+
+      // Stats
+      document.getElementById('statRole').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+      document.getElementById('statJoined').textContent = fmtDate(user.createdAt);
+      document.getElementById('statLastLogin').textContent = user.lastLogin ? fmtDate(user.lastLogin) : 'First login';
+
+      // Profile
+      document.getElementById('profileName').textContent = user.name;
+      document.getElementById('profileEmail').textContent = user.email;
+      document.getElementById('profileRole').textContent = '👑 ' + user.role;
+      document.getElementById('profileId').textContent = user.id;
+
+      // Activity
+      document.getElementById('act-created').textContent = fmtDateTime(user.createdAt);
+      document.getElementById('act-login').textContent = user.lastLogin ? fmtDateTime(user.lastLogin) : '—';
+
+      // Store for modal
+      window._currentUser = user;
+    }
+
+    // Logout
+    async function logout() {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {}
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+      window.location.href = '/login';
+    }
+
+    // Edit Profile Modal
+    document.getElementById('editProfileBtn').addEventListener('click', () => {
+      const u = window._currentUser;
+      if (u) {
+        document.getElementById('editName').value = u.name;
+        document.getElementById('editEmail').value = u.email;
+      }
+      document.getElementById('editModal').classList.add('open');
+    });
+
+    function closeModal() {
+      document.getElementById('editModal').classList.remove('open');
+      document.getElementById('editAlert').classList.remove('visible');
+    }
+
+    document.getElementById('editModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+      const name = document.getElementById('editName').value.trim();
+      const email = document.getElementById('editEmail').value.trim();
+      const editAlert = document.getElementById('editAlert');
+      const editSpinner = document.getElementById('editSpinner');
+      const editBtnText = document.getElementById('editBtnText');
+      const saveBtn = document.getElementById('saveProfileBtn');
+
+      editAlert.classList.remove('visible');
+      saveBtn.disabled = true;
+      editSpinner.classList.add('visible');
+      editBtnText.textContent = 'Saving...';
+
+      try {
+        const res = await fetch('/api/auth/update-profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name, email }),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          localStorage.setItem('authUser', JSON.stringify(json.user));
+          closeModal();
+          loadUser();
+        } else {
+          document.getElementById('editAlertMsg').textContent = json.message || 'Update failed.';
+          editAlert.classList.add('visible');
+        }
+      } catch {
+        document.getElementById('editAlertMsg').textContent = 'Network error.';
+        editAlert.classList.add('visible');
+      } finally {
+        saveBtn.disabled = false;
+        editSpinner.classList.remove('visible');
+        editBtnText.textContent = 'Save Changes';
+      }
+    });
+
+    // Init
+    loadUser();
+  </script>
+</body>
+</html>

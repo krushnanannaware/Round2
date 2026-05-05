@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AuthVault — Secure Authentication Platform</title>
+  <meta name="description" content="AuthVault — A modern, production-ready authentication platform with JWT, bcrypt, and MongoDB." />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .hero-visual {
+      margin-top: 60px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 800px;
+      width: 100%;
+      animation: slideUp 0.5s ease 0.5s both;
+    }
+    .mini-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      text-align: left;
+      backdrop-filter: blur(10px);
+      transition: var(--transition);
+    }
+    .mini-card:hover {
+      border-color: rgba(124,58,237,0.35);
+      transform: translateY(-3px);
+    }
+    .mini-card-icon { font-size: 28px; margin-bottom: 10px; }
+    .mini-card-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+    .mini-card-desc { font-size: 0.78rem; color: var(--text-secondary); }
+    @media(max-width:600px) { .hero-visual { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <!-- Background -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <div class="brand-logo">🔐</div>
+      <span class="brand-name">AuthVault</span>
+    </a>
+    <div class="navbar-links" id="navLinks">
+      <a href="/login" class="btn btn-ghost" id="loginNavBtn">Log In</a>
+      <a href="/signup" class="btn btn-primary" id="signupNavBtn">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span>🚀</span> Production-Ready Authentication
+    </div>
+    <h1 class="hero-title">
+      Secure Auth for<br />
+      <span class="gradient-text">Modern Web Apps</span>
+    </h1>
+    <p class="hero-description">
+      Full-stack authentication with JWT, bcrypt, MongoDB, and Express.
+      Built for security, speed, and an amazing user experience.
+    </p>
+    <div class="hero-cta">
+      <a href="/signup" class="btn btn-primary btn-lg" id="heroSignupBtn">
+        🚀 Create Account
+      </a>
+      <a href="/login" class="btn btn-outline btn-lg" id="heroLoginBtn">
+        Sign In
+      </a>
+    </div>
+
+    <!-- Mini cards -->
+    <div class="hero-visual">
+      <div class="mini-card">
+        <div class="mini-card-icon">🔑</div>
+        <div class="mini-card-title">JWT Tokens</div>
+        <div class="mini-card-desc">Stateless, signed auth tokens with expiry</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-card-icon">🛡️</div>
+        <div class="mini-card-title">bcrypt Hashing</div>
+        <div class="mini-card-desc">Passwords hashed with salt rounds: 12</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-card-icon">🗄️</div>
+        <div class="mini-card-title">MongoDB</div>
+        <div class="mini-card-desc">Persistent user data with Mongoose ODM</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <h2 class="section-title">Everything You Need</h2>
+    <p class="section-subtitle">Enterprise-grade features built in from day one.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(124,58,237,0.15);">🔒</div>
+        <div class="feature-title">Real Authentication</div>
+        <div class="feature-desc">Signup and login with real database storage. No mock data — every user is persisted in MongoDB.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(236,72,153,0.15);">⚡</div>
+        <div class="feature-title">Rate Limiting</div>
+        <div class="feature-desc">Auth routes are protected against brute-force with express-rate-limit: 20 requests per 15 minutes.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(16,185,129,0.15);">✅</div>
+        <div class="feature-title">Input Validation</div>
+        <div class="feature-desc">All inputs are sanitized and validated server-side with express-validator before hitting the database.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(6,182,212,0.15);">🍪</div>
+        <div class="feature-title">Secure Cookies</div>
+        <div class="feature-desc">Tokens stored as httpOnly, Strict SameSite cookies alongside localStorage for flexibility.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(245,158,11,0.15);">🎯</div>
+        <div class="feature-title">Protected Routes</div>
+        <div class="feature-desc">Dashboard requires a valid JWT. Unauthenticated users are automatically redirected to login.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(124,58,237,0.15);">👤</div>
+        <div class="feature-title">Role-Based Access</div>
+        <div class="feature-desc">User roles (user/admin) are stored in the DB and embedded in the JWT for future RBAC expansion.</div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Update nav if already logged in
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      const navLinks = document.getElementById('navLinks');
+      navLinks.innerHTML = `
+        <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
+        <button class="btn btn-primary" onclick="logout()">Log Out</button>
+      `;
+    }
+
+    async function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch {}
+      window.location.reload();
+    }
+  </script>
+</body>
+</html>
