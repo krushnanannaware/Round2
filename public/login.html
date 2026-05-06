@@ -113,6 +113,11 @@
       window.location.href = '/dashboard';
     }
 
+    // Show success banner if redirected after signup
+    if (new URLSearchParams(window.location.search).get('signup') === '1') {
+      document.getElementById('loginSuccess').classList.add('visible');
+    }
+
     const form = document.getElementById('loginForm');
     const pwInput = document.getElementById('password');
     const pwToggle = document.getElementById('pwToggle');

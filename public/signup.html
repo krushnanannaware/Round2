@@ -237,6 +237,7 @@
         const json = await res.json();
 
         if (res.ok && json.success) {
+          // Store auth session and go directly to dashboard
           localStorage.setItem('authToken', json.token);
           localStorage.setItem('authUser', JSON.stringify(json.user));
           window.location.href = '/dashboard';

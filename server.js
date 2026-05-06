@@ -72,12 +72,22 @@ app.get('/signup', (req, res) =>
 app.get('/dashboard', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'))
 );
-// Catch-all: serve index.html for unknown routes
+
+// ─── API 404 Handler ─────────────────────────────────────────────────────────
+// Must be before the SPA catch-all so API routes get proper JSON 404 errors
+// Note: Express 5 requires named wildcards — using /api/{*splat}
+app.use('/api/{*splat}', (req, res) => {
+  res.status(404).json({ success: false, message: `API route not found: ${req.originalUrl}` });
+});
+
+// ─── SPA Catch-all ───────────────────────────────────────────────────────────
+// Only serve index.html for non-API routes (client-side routing)
 app.use((req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'index.html'))
 );
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
+// MUST be last — Express identifies error handlers by the 4-argument signature
 app.use(errorHandler);
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
