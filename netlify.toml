@@ -1,0 +1,42 @@
+# ─── Build Settings ───────────────────────────────────────────────────────────
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "npm install"
+
+# ─── Node.js Version ──────────────────────────────────────────────────────────
+[build.environment]
+  NODE_VERSION = "18"
+
+# ─── API Routes → Serverless Function ────────────────────────────────────────
+# All /api/* requests are rewritten to the serverless function.
+# :splat captures everything after /api/ and appends it to the function URL.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# ─── HTML Page Routes ─────────────────────────────────────────────────────────
+# Netlify auto-serves login.html for /login (pretty URLs), but explicit rules
+# ensure it works even if pretty URLs are disabled.
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/signup"
+  to = "/signup.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard.html"
+  status = 200
+
+# ─── SPA Fallback ─────────────────────────────────────────────────────────────
+# Any other unmatched route falls back to index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

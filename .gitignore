@@ -1,3 +1,19 @@
+# Dependencies
 node_modules/
+
+# Environment variables — NEVER commit these
 .env
+.env.local
+.env.production
+
+# Logs
 *.log
+npm-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+
+# Netlify cache
+.netlify/
